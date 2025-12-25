@@ -65,6 +65,7 @@ func (c *Config) TokenSource(ctx context.Context) oauth2.TokenSource {
 		ctx:  ctx,
 		conf: c,
 	}
+
 	return oauth2.ReuseTokenSource(nil, source)
 }
 
@@ -109,6 +110,7 @@ func (t *tokenSource) Token() (*oauth2.Token, error) {
 		"application/json",
 		bytes.NewBuffer(reqBody),
 		tokenErrorPrefix)
+
 	if err != nil {
 		return nil, err
 	}
@@ -117,6 +119,7 @@ func (t *tokenSource) Token() (*oauth2.Token, error) {
 
 func (t *tokenSource) refreshAccessToken(client *http.Client) (*oauth2.Token, error) {
 	const refreshAccessTokenErrorPrefix = errorPrefix + "unable to refresh access token: "
+
 	return t.requestAccessToken(
 		client,
 		"GET",
@@ -148,6 +151,11 @@ func (t *tokenSource) requestAccessToken(
 	defer resp.Body.Close()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		var result Result[any]
+		if err := json.NewDecoder(resp.Body).Decode(&result); err == nil && !result.IsSuccess {
+			return nil, fmt.Errorf("%sAPI error: %s", errorPrefix, result.Error)
+		}
+
 		return nil, fmt.Errorf("%sreceived non-2xx status code: %s (%d)", errorPrefix, resp.Status, resp.StatusCode)
 	}
 
@@ -163,6 +171,7 @@ func (t *tokenSource) requestAccessToken(
 	}
 
 	t.refreshToken = result.Data.RefreshToken
+
 	return &oauth2.Token{
 		AccessToken: result.Data.AccessToken,
 		TokenType:   "Bearer",
