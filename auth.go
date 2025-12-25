@@ -156,6 +156,7 @@ func (t *tokenSource) requestAccessToken(
 		return nil, fmt.Errorf("%sAPI error: %s", errorPrefix, result.Error)
 	}
 
+	t.accessToken = result.Data.AccessToken
 	t.refreshToken = result.Data.RefreshToken
 
 	return &oauth2.Token{
