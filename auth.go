@@ -62,18 +62,26 @@ func (c *Config) TokenSource(ctx context.Context) oauth2.TokenSource {
 type tokenSource struct {
 	ctx          context.Context
 	conf         *Config
+	accessToken  string
 	refreshToken string
 }
 
 // Token implements [oauth2.TokenSource].
 func (t *tokenSource) Token() (*oauth2.Token, error) {
-	const tokenErrorPrefix = errorPrefix + "unable to retrieve access token: "
+	const retrieveTokenErrorPrefix = errorPrefix + "unable to retrieve access token: "
+	const refreshTokenErrorPrefix = errorPrefix + "unable to refresh access token: "
 
 	client := oauth2.NewClient(t.ctx, nil)
 	defer client.CloseIdleConnections()
 
-	if t.refreshToken != "" {
-		token, err := t.refreshAccessToken(client)
+	if t.accessToken != "" && t.refreshToken != "" {
+		token, err := t.requestAccessToken(
+			client,
+			"GET",
+			fmt.Sprintf(apiUrlRefreshToken, t.refreshToken),
+			func(req *http.Request) { req.Header.Set("Authorization", "Bearer "+t.accessToken) },
+			nil,
+			refreshTokenErrorPrefix)
 		if err == nil {
 			return token, nil
 		}
@@ -90,16 +98,16 @@ func (t *tokenSource) Token() (*oauth2.Token, error) {
 
 	reqBody, err := json.Marshal(jsonData)
 	if err != nil {
-		return nil, fmt.Errorf(tokenErrorPrefix+"failed to marshal request body: %w", err)
+		return nil, fmt.Errorf(retrieveTokenErrorPrefix+"failed to marshal request body: %w", err)
 	}
 
 	token, err := t.requestAccessToken(
 		client,
 		"POST",
 		apiUrlLogin,
-		"application/json",
+		func(req *http.Request) { req.Header.Set("Content-Type", "application/json") },
 		bytes.NewBuffer(reqBody),
-		tokenErrorPrefix)
+		retrieveTokenErrorPrefix)
 
 	if err != nil {
 		return nil, err
@@ -107,31 +115,19 @@ func (t *tokenSource) Token() (*oauth2.Token, error) {
 	return token, nil
 }
 
-func (t *tokenSource) refreshAccessToken(client *http.Client) (*oauth2.Token, error) {
-	const refreshAccessTokenErrorPrefix = errorPrefix + "unable to refresh access token: "
-
-	return t.requestAccessToken(
-		client,
-		"GET",
-		fmt.Sprintf(apiUrlRefreshToken, t.refreshToken),
-		"",
-		nil,
-		refreshAccessTokenErrorPrefix)
-}
-
 func (t *tokenSource) requestAccessToken(
 	client *http.Client,
 	method string,
 	url string,
-	contentType string,
+	requestProcessor func(*http.Request),
 	body io.Reader,
 	errorPrefix string) (*oauth2.Token, error) {
 	req, err := http.NewRequest(method, url, body)
 	if err != nil {
 		return nil, err
 	}
-	if contentType != "" {
-		req.Header.Set("Content-Type", contentType)
+	if requestProcessor != nil {
+		requestProcessor(req)
 	}
 	resp, err := client.Do(req)
 
