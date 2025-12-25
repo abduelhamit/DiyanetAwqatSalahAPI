@@ -3,11 +3,13 @@ package diyanet
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"golang.org/x/oauth2"
@@ -23,18 +25,6 @@ type Config struct {
 
 	// Password is the user's password used for authentication.
 	Password string
-
-	// AccessTokenExpiryDelta is the duration before token expiry when a token refresh should be attempted.
-	//
-	// If zero, a default of 45 minutes is used.
-	AccessTokenExpiryDelta time.Duration
-}
-
-func (c *Config) accessTokenExpiryDelta() time.Duration {
-	if c.AccessTokenExpiryDelta == 0 {
-		return 45 * time.Minute
-	}
-	return c.AccessTokenExpiryDelta
 }
 
 // Token uses client credentials to retrieve a token.
@@ -175,6 +165,38 @@ func (t *tokenSource) requestAccessToken(
 	return &oauth2.Token{
 		AccessToken: result.Data.AccessToken,
 		TokenType:   "Bearer",
-		Expiry:      time.Now().Add(t.conf.accessTokenExpiryDelta()),
+		Expiry:      time.Unix(getExpirationTime(result.Data.AccessToken), 0).Add(-15 * time.Minute),
 	}, nil
+}
+
+func getExpirationTime(accessToken string) int64 {
+	const tokenDelim = "."
+
+	_, s, ok := strings.Cut(accessToken, tokenDelim)
+	if !ok { // no period found
+		log.Printf("%sinvalid access token format", errorPrefix)
+		return 0
+	}
+
+	payload, s, ok := strings.Cut(s, tokenDelim)
+	if !ok { // only one period found
+		log.Printf("%sinvalid access token format", errorPrefix)
+		return 0
+	}
+
+	decoded, err := base64.RawURLEncoding.DecodeString(payload)
+	if err != nil {
+		log.Printf("%sfailed to decode access token payload: %v", errorPrefix, err)
+		return 0
+	}
+
+	var claims struct {
+		Exp int64 `json:"exp"`
+	}
+	if err := json.Unmarshal(decoded, &claims); err != nil {
+		log.Printf("%sfailed to unmarshal access token claims: %v", errorPrefix, err)
+		return 0
+	}
+
+	return claims.Exp
 }
