@@ -56,7 +56,7 @@ func (c *Config) TokenSource(ctx context.Context) oauth2.TokenSource {
 		conf: c,
 	}
 
-	return oauth2.ReuseTokenSource(nil, source)
+	return oauth2.ReuseTokenSourceWithExpiry(nil, source, 15*time.Minute)
 }
 
 type tokenSource struct {
@@ -161,7 +161,7 @@ func (t *tokenSource) requestAccessToken(
 	return &oauth2.Token{
 		AccessToken: result.Data.AccessToken,
 		TokenType:   "Bearer",
-		Expiry:      time.Unix(getExpirationTime(result.Data.AccessToken), 0).Add(-15 * time.Minute),
+		Expiry:      time.Unix(getExpirationTime(result.Data.AccessToken), 0),
 	}, nil
 }
 
