@@ -83,7 +83,7 @@ func (t *tokenSource) Token() (*oauth2.Token, error) {
 
 	if t.accessToken != "" &&
 		t.refreshToken != "" &&
-		getExpirationTime(t.accessToken).Round(0).Add(-10 * time.Second).After(time.Now()) {
+		getExpirationTime(t.accessToken).Round(0).Add(-10*time.Second).After(time.Now()) {
 		token, err := t.requestAccessToken(
 			client,
 			"GET",
@@ -147,7 +147,7 @@ func (t *tokenSource) requestAccessToken(
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		var result Result[any]
-		if err := json.NewDecoder(resp.Body).Decode(&result); err == nil && !result.IsSuccess {
+		if err := json.NewDecoder(resp.Body).Decode(&result); err == nil && !result.Ok {
 			return nil, fmt.Errorf("%sAPI error: %s", errorPrefix, result.Error)
 		}
 
@@ -161,7 +161,7 @@ func (t *tokenSource) requestAccessToken(
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, fmt.Errorf("%sfailed to decode response: %w", errorPrefix, err)
 	}
-	if !result.IsSuccess {
+	if !result.Ok {
 		return nil, fmt.Errorf("%sAPI error: %s", errorPrefix, result.Error)
 	}
 
