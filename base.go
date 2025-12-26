@@ -1,6 +1,6 @@
 package diyanet
 
-const apiUrlPrefix = "https://awqatsalah.diyanet.gov.tr/"
+const apiURLPrefix = "https://awqatsalah.diyanet.gov.tr/"
 const errorPrefix = "diyanet: "
 
 // Result is a generic response envelope returned by Diyanet Awqat Salah APIs.

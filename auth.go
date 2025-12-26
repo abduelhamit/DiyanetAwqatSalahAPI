@@ -15,8 +15,8 @@ import (
 	"golang.org/x/oauth2"
 )
 
-const apiUrlLogin = apiUrlPrefix + "Auth/Login"
-const apiUrlRefreshToken = apiUrlPrefix + "Auth/RefreshToken/%s"
+const apiURLLogin = apiURLPrefix + "Auth/Login"
+const apiURLRefreshToken = apiURLPrefix + "Auth/RefreshToken/%s"
 
 var earlyExpiry = 15 * time.Minute
 var past time.Time
@@ -41,14 +41,14 @@ func (c *Config) Token(ctx context.Context) (*oauth2.Token, error) {
 	return c.TokenSource(ctx).Token()
 }
 
-// Client returns an HTTP client using the provided token.
+// HTTPClient returns an HTTP client using the provided configuration.
 // The token will auto-refresh as necessary.
 //
 // The provided context optionally controls which HTTP client
 // is returned. See the [oauth2.HTTPClient] variable.
 //
 // The returned [http.Client] and its Transport should not be modified.
-func (c *Config) Client(ctx context.Context) *http.Client {
+func (c *Config) HTTPClient(ctx context.Context) *http.Client {
 	return oauth2.NewClient(ctx, c.TokenSource(ctx))
 }
 
@@ -87,7 +87,7 @@ func (t *tokenSource) Token() (*oauth2.Token, error) {
 		token, err := t.requestAccessToken(
 			client,
 			"GET",
-			fmt.Sprintf(apiUrlRefreshToken, t.refreshToken),
+			fmt.Sprintf(apiURLRefreshToken, t.refreshToken),
 			func(req *http.Request) { req.Header.Set("Authorization", "Bearer "+t.accessToken) },
 			nil,
 			refreshTokenErrorPrefix)
@@ -113,7 +113,7 @@ func (t *tokenSource) Token() (*oauth2.Token, error) {
 	token, err := t.requestAccessToken(
 		client,
 		"POST",
-		apiUrlLogin,
+		apiURLLogin,
 		func(req *http.Request) { req.Header.Set("Content-Type", "application/json") },
 		bytes.NewBuffer(reqBody),
 		retrieveTokenErrorPrefix)
