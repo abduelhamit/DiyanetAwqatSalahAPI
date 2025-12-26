@@ -18,6 +18,13 @@ import (
 const apiUrlLogin = apiUrlPrefix + "Auth/Login"
 const apiUrlRefreshToken = apiUrlPrefix + "Auth/RefreshToken/%s"
 
+var earlyExpiry = 15 * time.Minute
+var past time.Time
+
+func init() {
+	past = past.Add(earlyExpiry + 1)
+}
+
 // Config encapsulates the credentials (email and password) used to authenticate with Diyanet services.
 type Config struct {
 	// Email is the user's email address used for authentication.
@@ -56,7 +63,7 @@ func (c *Config) TokenSource(ctx context.Context) oauth2.TokenSource {
 		conf: c,
 	}
 
-	return oauth2.ReuseTokenSourceWithExpiry(nil, source, 15*time.Minute)
+	return oauth2.ReuseTokenSourceWithExpiry(nil, source, earlyExpiry)
 }
 
 type tokenSource struct {
@@ -74,7 +81,9 @@ func (t *tokenSource) Token() (*oauth2.Token, error) {
 	client := oauth2.NewClient(t.ctx, nil)
 	defer client.CloseIdleConnections()
 
-	if t.accessToken != "" && t.refreshToken != "" {
+	if t.accessToken != "" &&
+		t.refreshToken != "" &&
+		getExpirationTime(t.accessToken).Round(0).Add(-10 * time.Second).After(time.Now()) {
 		token, err := t.requestAccessToken(
 			client,
 			"GET",
@@ -162,29 +171,29 @@ func (t *tokenSource) requestAccessToken(
 	return &oauth2.Token{
 		AccessToken: result.Data.AccessToken,
 		TokenType:   "Bearer",
-		Expiry:      time.Unix(getExpirationTime(result.Data.AccessToken), 0),
+		Expiry:      getExpirationTime(result.Data.AccessToken),
 	}, nil
 }
 
-func getExpirationTime(accessToken string) int64 {
+func getExpirationTime(accessToken string) time.Time {
 	const tokenDelim = "."
 
 	_, s, ok := strings.Cut(accessToken, tokenDelim)
 	if !ok { // no period found
 		log.Printf("%sinvalid access token format", errorPrefix)
-		return 0
+		return past
 	}
 
 	payload, s, ok := strings.Cut(s, tokenDelim)
 	if !ok { // only one period found
 		log.Printf("%sinvalid access token format", errorPrefix)
-		return 0
+		return past
 	}
 
 	decoded, err := base64.RawURLEncoding.DecodeString(payload)
 	if err != nil {
 		log.Printf("%sfailed to decode access token payload: %v", errorPrefix, err)
-		return 0
+		return past
 	}
 
 	var claims struct {
@@ -192,8 +201,8 @@ func getExpirationTime(accessToken string) int64 {
 	}
 	if err := json.Unmarshal(decoded, &claims); err != nil {
 		log.Printf("%sfailed to unmarshal access token claims: %v", errorPrefix, err)
-		return 0
+		return past
 	}
 
-	return claims.Exp
+	return time.Unix(claims.Exp, 0)
 }
