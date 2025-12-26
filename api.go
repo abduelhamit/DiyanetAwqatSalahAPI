@@ -198,7 +198,7 @@ func (c *Client) GetCitiesByState(stateID int) ([]City, error) {
 // CityDetail represents detailed information about a city as returned by the Diyanet Awqat Salah API.
 type CityDetail struct {
 	// Id is the unique identifier for the city.
-	Id int
+	Id string
 	// Name is the name of the city.
 	Name string
 	// Code is the code of the city.
