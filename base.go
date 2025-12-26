@@ -3,6 +3,15 @@ package diyanet
 const apiURLPrefix = "https://awqatsalah.diyanet.gov.tr/"
 const errorPrefix = "diyanet: "
 
+// Config holds the configuration parameters for the Diyanet Awqat Salah service.
+type Config struct {
+	// Email is the user's email address used for authentication.
+	Email string
+
+	// Password is the user's password used for authentication.
+	Password string
+}
+
 // Result is a generic response envelope returned by Diyanet Awqat Salah APIs.
 // It wraps the actual payload, a success indicator, and any server-provided message.
 type Result[T any] struct {

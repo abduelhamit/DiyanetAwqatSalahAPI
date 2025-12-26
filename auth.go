@@ -17,21 +17,14 @@ import (
 
 const apiURLLogin = apiURLPrefix + "Auth/Login"
 const apiURLRefreshToken = apiURLPrefix + "Auth/RefreshToken/%s"
+const retrieveTokenErrorPrefix = errorPrefix + "unable to retrieve access token: "
+const refreshTokenErrorPrefix = errorPrefix + "unable to refresh access token: "
 
 var earlyExpiry = 15 * time.Minute
 var past time.Time
 
 func init() {
 	past = past.Add(earlyExpiry + 1)
-}
-
-// Config encapsulates the credentials (email and password) used to authenticate with Diyanet services.
-type Config struct {
-	// Email is the user's email address used for authentication.
-	Email string
-
-	// Password is the user's password used for authentication.
-	Password string
 }
 
 // Token uses client credentials to retrieve a token.
@@ -75,9 +68,6 @@ type tokenSource struct {
 
 // Token implements [oauth2.TokenSource].
 func (t *tokenSource) Token() (*oauth2.Token, error) {
-	const retrieveTokenErrorPrefix = errorPrefix + "unable to retrieve access token: "
-	const refreshTokenErrorPrefix = errorPrefix + "unable to refresh access token: "
-
 	client := oauth2.NewClient(t.ctx, nil)
 	defer client.CloseIdleConnections()
 
