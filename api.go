@@ -18,6 +18,7 @@ const apiURLCityDetail = apiURLPrefix + "api/Place/CityDetail/%d"
 const apiURLPrayerTimeDaily = apiURLPrefix + "api/PrayerTime/Daily/%d"
 const apiURLPrayerTimeWeekly = apiURLPrefix + "api/PrayerTime/Weekly/%d"
 const apiURLPrayerTimeMonthly = apiURLPrefix + "api/PrayerTime/Monthly/%d"
+const apiURLPrayerTimeRamadan = apiURLPrefix + "api/PrayerTime/Ramadan/%d"
 
 // Client is a Diyanet Awqat Salah API client.
 type Client struct {
@@ -364,6 +365,32 @@ func (c *Client) GetPrayerTimeMonthly(cityID int, timezone *time.Location) ([]Pr
 	}
 	if !result.Ok {
 		return nil, fmt.Errorf(errorPrefix+"API error retrieving monthly prayer time for city ID %d: %s", cityID, result.Error)
+	}
+
+	for i := range result.Data {
+		result.Data[i].fixGregorianDate(timezone)
+	}
+
+	return result.Data, nil
+}
+
+// GetPrayerTimeRamadan retrieves the Ramadan prayer times for a given city ID from the Diyanet Awqat Salah API.
+// If a timezone is provided, the GregorianDate field will be adjusted to that timezone.
+// If timezone is nil, the GregorianDate will be set to a fixed zone based on the GMT offset provided by the API.
+func (c *Client) GetPrayerTimeRamadan(cityID int, timezone *time.Location) ([]PrayerTime, error) {
+	url := fmt.Sprintf(apiURLPrayerTimeRamadan, cityID)
+	resp, err := c.httpClient.Get(url)
+	if err != nil {
+		return nil, fmt.Errorf(errorPrefix+"unable to get Ramadan prayer time for city ID %d: %w", cityID, err)
+	}
+	defer resp.Body.Close()
+
+	var result Result[[]PrayerTime]
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, fmt.Errorf(errorPrefix+"unable to decode Ramadan prayer time response for city ID %d: %w", cityID, err)
+	}
+	if !result.Ok {
+		return nil, fmt.Errorf(errorPrefix+"API error retrieving Ramadan prayer time for city ID %d: %s", cityID, result.Error)
 	}
 
 	for i := range result.Data {
