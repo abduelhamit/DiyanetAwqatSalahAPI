@@ -281,18 +281,24 @@ type PrayerTime struct {
 	GreenwichMeanTimeZone float32
 }
 
-func (pt *PrayerTime) fixGregorianDate() {
+func (pt *PrayerTime) fixGregorianDate(timezone *time.Location) {
+	if timezone == nil {
+		timezone = time.FixedZone(fmt.Sprintf("GMT%.2f", pt.GreenwichMeanTimeZone), int(pt.GreenwichMeanTimeZone*3600))
+	}
+
 	pt.GregorianDate = time.Date(
 		pt.GregorianDate.Year(),
 		pt.GregorianDate.Month(),
 		pt.GregorianDate.Day(),
 		0, 0, 0, 0,
-		time.FixedZone(fmt.Sprintf("GMT%.2f", pt.GreenwichMeanTimeZone), int(pt.GreenwichMeanTimeZone*3600)),
+		timezone,
 	)
 }
 
 // GetPrayerTimeDaily retrieves the daily prayer times for a given city ID from the Diyanet Awqat Salah API.
-func (c *Client) GetPrayerTimeDaily(cityID int) ([]PrayerTime, error) {
+// If a timezone is provided, the GregorianDate field will be adjusted to that timezone.
+// If timezone is nil, the GregorianDate will be set to a fixed zone based on the GMT offset provided by the API.
+func (c *Client) GetPrayerTimeDaily(cityID int, timezone *time.Location) ([]PrayerTime, error) {
 	url := fmt.Sprintf(apiURLPrayerTimeDaily, cityID)
 	resp, err := c.httpClient.Get(url)
 	if err != nil {
@@ -309,14 +315,16 @@ func (c *Client) GetPrayerTimeDaily(cityID int) ([]PrayerTime, error) {
 	}
 
 	for i := range result.Data {
-		result.Data[i].fixGregorianDate()
+		result.Data[i].fixGregorianDate(timezone)
 	}
 
 	return result.Data, nil
 }
 
 // GetPrayerTimeWeekly retrieves the weekly prayer times for a given city ID from the Diyanet Awqat Salah API.
-func (c *Client) GetPrayerTimeWeekly(cityID int) ([]PrayerTime, error) {
+// If a timezone is provided, the GregorianDate field will be adjusted to that timezone.
+// If timezone is nil, the GregorianDate will be set to a fixed zone based on the GMT offset provided by the API.
+func (c *Client) GetPrayerTimeWeekly(cityID int, timezone *time.Location) ([]PrayerTime, error) {
 	url := fmt.Sprintf(apiURLPrayerTimeWeekly, cityID)
 	resp, err := c.httpClient.Get(url)
 	if err != nil {
@@ -333,14 +341,16 @@ func (c *Client) GetPrayerTimeWeekly(cityID int) ([]PrayerTime, error) {
 	}
 
 	for i := range result.Data {
-		result.Data[i].fixGregorianDate()
+		result.Data[i].fixGregorianDate(timezone)
 	}
 
 	return result.Data, nil
 }
 
 // GetPrayerTimeMonthly retrieves the monthly prayer times for a given city ID from the Diyanet Awqat Salah API.
-func (c *Client) GetPrayerTimeMonthly(cityID int) ([]PrayerTime, error) {
+// If a timezone is provided, the GregorianDate field will be adjusted to that timezone.
+// If timezone is nil, the GregorianDate will be set to a fixed zone based on the GMT offset provided by the API.
+func (c *Client) GetPrayerTimeMonthly(cityID int, timezone *time.Location) ([]PrayerTime, error) {
 	url := fmt.Sprintf(apiURLPrayerTimeMonthly, cityID)
 	resp, err := c.httpClient.Get(url)
 	if err != nil {
@@ -357,7 +367,7 @@ func (c *Client) GetPrayerTimeMonthly(cityID int) ([]PrayerTime, error) {
 	}
 
 	for i := range result.Data {
-		result.Data[i].fixGregorianDate()
+		result.Data[i].fixGregorianDate(timezone)
 	}
 
 	return result.Data, nil
