@@ -12,8 +12,8 @@ type Client struct {
 }
 
 // NewClient creates a new Diyanet Awqat Salah API client using the provided configuration.
-func (c *Config) NewClient(ctx context.Context) *Client {
-	return &Client{
+func (c Config) NewClient(ctx context.Context) Client {
+	return Client{
 		httpClient: c.HTTPClient(ctx),
 	}
 }

@@ -30,7 +30,7 @@ func init() {
 // Token uses client credentials to retrieve a token.
 //
 // The provided context optionally controls which HTTP client is used. See the [oauth2.HTTPClient] variable.
-func (c *Config) Token(ctx context.Context) (*oauth2.Token, error) {
+func (c Config) Token(ctx context.Context) (*oauth2.Token, error) {
 	return c.TokenSource(ctx).Token()
 }
 
@@ -41,7 +41,7 @@ func (c *Config) Token(ctx context.Context) (*oauth2.Token, error) {
 // is returned. See the [oauth2.HTTPClient] variable.
 //
 // The returned [http.Client] and its Transport should not be modified.
-func (c *Config) HTTPClient(ctx context.Context) *http.Client {
+func (c Config) HTTPClient(ctx context.Context) *http.Client {
 	return oauth2.NewClient(ctx, c.TokenSource(ctx))
 }
 
@@ -50,7 +50,7 @@ func (c *Config) HTTPClient(ctx context.Context) *http.Client {
 // client ID and client secret.
 //
 // Most users will use [Config.Client] instead.
-func (c *Config) TokenSource(ctx context.Context) oauth2.TokenSource {
+func (c Config) TokenSource(ctx context.Context) oauth2.TokenSource {
 	source := &tokenSource{
 		ctx:  ctx,
 		conf: c,
@@ -61,7 +61,7 @@ func (c *Config) TokenSource(ctx context.Context) oauth2.TokenSource {
 
 type tokenSource struct {
 	ctx          context.Context
-	conf         *Config
+	conf         Config
 	accessToken  string
 	refreshToken string
 }

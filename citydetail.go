@@ -32,24 +32,24 @@ type CityDetail struct {
 }
 
 // GetCityDetail retrieves detailed information about a city by its ID from the Diyanet Awqat Salah API.
-func (c *City) GetCityDetail() (CityDetail, error) {
+func (c City) GetCityDetail() (*CityDetail, error) {
 	url := fmt.Sprintf(apiURLCityDetail, c.Id)
 	resp, err := c.client.httpClient.Get(url)
 	if err != nil {
-		return CityDetail{},
+		return nil,
 			fmt.Errorf(errorPrefix+"unable to get city detail for city %s (%d – %s): %w",
 				c.Name, c.Id, c.Code, err)
 	}
 	defer resp.Body.Close()
 
-	var result Result[CityDetail]
+	var result Result[*CityDetail]
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return CityDetail{},
+		return nil,
 			fmt.Errorf(errorPrefix+"unable to decode city detail response for city %s (%d – %s): %w",
 				c.Name, c.Id, c.Code, err)
 	}
 	if !result.Ok {
-		return CityDetail{},
+		return nil,
 			fmt.Errorf(errorPrefix+"API error retrieving city detail for city %s (%d – %s): %s",
 				c.Name, c.Id, c.Code, result.Error)
 	}

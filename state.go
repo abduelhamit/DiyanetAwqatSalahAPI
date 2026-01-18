@@ -11,7 +11,7 @@ const apiURLStatesByCountry = apiURLPrefix + "api/Place/States/%d"
 // State represents a state or province as returned by the Diyanet Awqat Salah API.
 type State struct {
 	// client is the Diyanet Awqat Salah API client.
-	client *Client
+	client Client
 	// Id is the unique identifier for the state.
 	Id int
 	// Code is the code of the state.
@@ -21,7 +21,7 @@ type State struct {
 }
 
 // GetStates retrieves the list of states from the Diyanet Awqat Salah API.
-func (c *Client) GetStates() ([]State, error) {
+func (c Client) GetStates() ([]State, error) {
 	resp, err := c.httpClient.Get(apiURLStates)
 	if err != nil {
 		return nil, fmt.Errorf(errorPrefix+"unable to get states: %w", err)
@@ -44,7 +44,7 @@ func (c *Client) GetStates() ([]State, error) {
 }
 
 // GetStates retrieves the list of states for a given country ID from the Diyanet Awqat Salah API.
-func (c *Country) GetStates() ([]State, error) {
+func (c Country) GetStates() ([]State, error) {
 	url := fmt.Sprintf(apiURLStatesByCountry, c.Id)
 	resp, err := c.client.httpClient.Get(url)
 	if err != nil {

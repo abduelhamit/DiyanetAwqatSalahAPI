@@ -11,7 +11,7 @@ const apiURLCitiesByState = apiURLPrefix + "api/Place/Cities/%d"
 // City represents a city as returned by the Diyanet Awqat Salah API.
 type City struct {
 	// client is the Diyanet Awqat Salah API client.
-	client *Client
+	client Client
 	// Id is the unique identifier for the city.
 	Id int
 	// Code is the code of the city.
@@ -21,7 +21,7 @@ type City struct {
 }
 
 // GetCities retrieves the list of cities from the Diyanet Awqat Salah API.
-func (c *Client) GetCities() ([]City, error) {
+func (c Client) GetCities() ([]City, error) {
 	resp, err := c.httpClient.Get(apiURLCities)
 	if err != nil {
 		return nil, fmt.Errorf(errorPrefix+"unable to get cities: %w", err)
@@ -44,7 +44,7 @@ func (c *Client) GetCities() ([]City, error) {
 }
 
 // GetCities retrieves the list of cities for a given state from the Diyanet Awqat Salah API.
-func (s *State) GetCities() ([]City, error) {
+func (s State) GetCities() ([]City, error) {
 	url := fmt.Sprintf(apiURLCitiesByState, s.Id)
 	resp, err := s.client.httpClient.Get(url)
 	if err != nil {
