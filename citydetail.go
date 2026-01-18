@@ -32,20 +32,26 @@ type CityDetail struct {
 }
 
 // GetCityDetail retrieves detailed information about a city by its ID from the Diyanet Awqat Salah API.
-func (c *Client) GetCityDetail(cityID int) (CityDetail, error) {
-	url := fmt.Sprintf(apiURLCityDetail, cityID)
-	resp, err := c.httpClient.Get(url)
+func (c *City) GetCityDetail() (CityDetail, error) {
+	url := fmt.Sprintf(apiURLCityDetail, c.Id)
+	resp, err := c.client.httpClient.Get(url)
 	if err != nil {
-		return CityDetail{}, fmt.Errorf(errorPrefix+"unable to get city detail for city ID %d: %w", cityID, err)
+		return CityDetail{},
+			fmt.Errorf(errorPrefix+"unable to get city detail for city %s (%d – %s): %w",
+				c.Name, c.Id, c.Code, err)
 	}
 	defer resp.Body.Close()
 
 	var result Result[CityDetail]
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return CityDetail{}, fmt.Errorf(errorPrefix+"unable to decode city detail response for city ID %d: %w", cityID, err)
+		return CityDetail{},
+			fmt.Errorf(errorPrefix+"unable to decode city detail response for city %s (%d – %s): %w",
+				c.Name, c.Id, c.Code, err)
 	}
 	if !result.Ok {
-		return CityDetail{}, fmt.Errorf(errorPrefix+"API error retrieving city detail for city ID %d: %s", cityID, result.Error)
+		return CityDetail{},
+			fmt.Errorf(errorPrefix+"API error retrieving city detail for city %s (%d – %s): %s",
+				c.Name, c.Id, c.Code, result.Error)
 	}
 
 	return result.Data, nil

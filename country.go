@@ -9,6 +9,8 @@ const apiURLCountries = apiURLPrefix + "api/Place/Countries"
 
 // Country represents a country as returned by the Diyanet Awqat Salah API.
 type Country struct {
+	// client is the Diyanet Awqat Salah API client.
+	client *Client
 	// Id is the unique identifier for the country.
 	Id int
 	// Code is the code of the country.
@@ -31,6 +33,10 @@ func (c *Client) GetCountries() ([]Country, error) {
 	}
 	if !result.Ok {
 		return nil, fmt.Errorf(errorPrefix+"API error retrieving countries: %s", result.Error)
+	}
+
+	for i := range result.Data {
+		result.Data[i].client = c
 	}
 
 	return result.Data, nil
