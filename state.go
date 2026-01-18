@@ -72,3 +72,20 @@ func (c Country) GetStates() ([]State, error) {
 
 	return result.Data, nil
 }
+
+// GetState retrieves a specific state for a given country by its code from the Diyanet Awqat Salah API.
+func (c Country) GetState(code string) (State, error) {
+	states, err := c.GetStates()
+	if err != nil {
+		return State{}, err
+	}
+
+	for _, state := range states {
+		if state.Code == code {
+			return state, nil
+		}
+	}
+
+	return State{}, fmt.Errorf(errorPrefix+"state with code %s not found in country %s (%d – %s)",
+		code, c.Name, c.Id, c.Code)
+}

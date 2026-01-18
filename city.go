@@ -72,3 +72,20 @@ func (s State) GetCities() ([]City, error) {
 
 	return result.Data, nil
 }
+
+// GetCity retrieves a city for a given state by its code from the Diyanet Awqat Salah API.
+func (s State) GetCity(code string) (City, error) {
+	cities, err := s.GetCities()
+	if err != nil {
+		return City{}, err
+	}
+
+	for _, city := range cities {
+		if city.Code == code {
+			return city, nil
+		}
+	}
+
+	return City{}, fmt.Errorf(errorPrefix+"city with code %s not found in state %s (%d – %s)",
+		code, s.Name, s.Id, s.Code)
+}

@@ -41,3 +41,19 @@ func (c Client) GetCountries() ([]Country, error) {
 
 	return result.Data, nil
 }
+
+// GetCountry retrieves a specific country by its code from the Diyanet Awqat Salah API.
+func (c Client) GetCountry(code string) (Country, error) {
+	countries, err := c.GetCountries()
+	if err != nil {
+		return Country{}, err
+	}
+
+	for _, country := range countries {
+		if country.Code == code {
+			return country, nil
+		}
+	}
+
+	return Country{}, fmt.Errorf(errorPrefix+"country with code %s not found", code)
+}
