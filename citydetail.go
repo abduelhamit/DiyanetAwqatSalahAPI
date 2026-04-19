@@ -34,7 +34,7 @@ type CityDetail struct {
 // GetCityDetail retrieves detailed information about a city by its ID from the Diyanet Awqat Salah API.
 func (c City) GetCityDetail() (*CityDetail, error) {
 	url := fmt.Sprintf(apiURLCityDetail, c.Id)
-	resp, err := c.client.httpClient.Get(url)
+	resp, err := c.client.get(url)
 	if err != nil {
 		return nil,
 			fmt.Errorf(errorPrefix+"unable to get city detail for city %s (%d – %s): %w",

@@ -30,7 +30,7 @@ type DailyContent struct {
 
 // GetDailyContent retrieves the daily content from the Diyanet Awqat Salah API.
 func (c Client) GetDailyContent() (*DailyContent, error) {
-	resp, err := c.httpClient.Get(apiURLDailyContent)
+	resp, err := c.get(apiURLDailyContent)
 	if err != nil {
 		return nil, fmt.Errorf(errorPrefix+"unable to get daily content: %w", err)
 	}

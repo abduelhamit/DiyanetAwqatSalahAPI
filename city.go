@@ -22,7 +22,7 @@ type City struct {
 
 // GetCities retrieves the list of cities from the Diyanet Awqat Salah API.
 func (c Client) GetCities() ([]City, error) {
-	resp, err := c.httpClient.Get(apiURLCities)
+	resp, err := c.get(apiURLCities)
 	if err != nil {
 		return nil, fmt.Errorf(errorPrefix+"unable to get cities: %w", err)
 	}
@@ -46,7 +46,7 @@ func (c Client) GetCities() ([]City, error) {
 // GetCities retrieves the list of cities for a given state from the Diyanet Awqat Salah API.
 func (s State) GetCities() ([]City, error) {
 	url := fmt.Sprintf(apiURLCitiesByState, s.Id)
-	resp, err := s.client.httpClient.Get(url)
+	resp, err := s.client.get(url)
 	if err != nil {
 		return nil,
 			fmt.Errorf(errorPrefix+"unable to get cities for state %s (%d – %s): %w",

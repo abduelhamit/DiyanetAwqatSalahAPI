@@ -21,7 +21,7 @@ type Country struct {
 
 // GetCountries retrieves the list of countries from the Diyanet Awqat Salah API.
 func (c Client) GetCountries() ([]Country, error) {
-	resp, err := c.httpClient.Get(apiURLCountries)
+	resp, err := c.get(apiURLCountries)
 	if err != nil {
 		return nil, fmt.Errorf(errorPrefix+"unable to get countries: %w", err)
 	}

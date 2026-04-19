@@ -22,7 +22,7 @@ type State struct {
 
 // GetStates retrieves the list of states from the Diyanet Awqat Salah API.
 func (c Client) GetStates() ([]State, error) {
-	resp, err := c.httpClient.Get(apiURLStates)
+	resp, err := c.get(apiURLStates)
 	if err != nil {
 		return nil, fmt.Errorf(errorPrefix+"unable to get states: %w", err)
 	}
@@ -46,7 +46,7 @@ func (c Client) GetStates() ([]State, error) {
 // GetStates retrieves the list of states for a given country ID from the Diyanet Awqat Salah API.
 func (c Country) GetStates() ([]State, error) {
 	url := fmt.Sprintf(apiURLStatesByCountry, c.Id)
-	resp, err := c.client.httpClient.Get(url)
+	resp, err := c.client.get(url)
 	if err != nil {
 		return nil,
 			fmt.Errorf(errorPrefix+"unable to get states for country %s (%d – %s): %w",
